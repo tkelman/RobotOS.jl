@@ -288,7 +288,7 @@ function modulecode(mod::ROSModule)
     push!(modcode,
         quote
             using PyCall
-            import Base.convert
+            import Base: convert, show
             import RobotOS
             import RobotOS.Time
             import RobotOS.Duration
@@ -449,6 +449,13 @@ function typecode(rosname::String, super::Symbol, members::Vector)
             jl
         end
     ))
+    #(5) Show
+    push!(exprs, :(
+        function show(io::IO, t::$tsym)
+            println(io, $tname, ":")
+            #Generated code here
+        end
+    ))
 
     #Now add the meat to the empty expressions above
     for (namestr,typ) in members
@@ -470,6 +477,7 @@ function _addtypemember!(exprs, namestr, typestr)
     consargs  = exprs[2].args[2].args[2].args
     pyconargs = exprs[3].args[2].args
     jlconargs = exprs[4].args[2].args
+    showargs  = exprs[5].args[2].args
 
     if typestr == "char" || typestr == "byte"
         warn("Use of type '$typestr' is deprecated in message definitions, ",
@@ -495,6 +503,7 @@ function _addtypemember!(exprs, namestr, typestr)
         memexpr = :($namesym::Array{$j_typ,1})
         defexpr = :([$j_def for i = 1:$arraylen])
         jlconexpr = :(jl.$namesym = convert(Array{$j_typ,1}, o[$namestr]))
+        showexpr = :(Base.showarray(t.$namesym))
 
         #uint8[] is string in rospy and PyCall's conversion to bytearray is
         #rejected by ROS
@@ -513,11 +522,13 @@ function _addtypemember!(exprs, namestr, typestr)
         defexpr = j_def
         jlconexpr = :(jl.$namesym = convert($j_typ, o[$namestr]))
         pyconexpr = :(py[$namestr] = convert(PyObject, o.$namesym))
+        showexpr = :(print(io, "  "); show(io, t.$namesym); println(io))
     end
     push!(typeargs, memexpr)
     insert!(jlconargs, length(jlconargs), jlconexpr)
     insert!(pyconargs, length(pyconargs), pyconexpr)
     push!(consargs, defexpr)
+    push!(showargs, showexpr)
 end
 
 #Build a String => Iterable{String} object from the individual package
