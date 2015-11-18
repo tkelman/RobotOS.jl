@@ -16,6 +16,11 @@ type Time <: TVal
 end
 Time() = Time(0,0)
 Time(t::Real) = Time(t,0)
+function Base.show(io::IO, t::Time)
+    println(io, "Time:")
+    println(io, "  secs: ", t.secs)
+    print(io,   "  nsecs: ", t.nsecs)
+end
 
 type Duration <: TVal
     secs::Int32
@@ -27,6 +32,11 @@ type Duration <: TVal
 end
 Duration() = Duration(0,0)
 Duration(t::Real) = Duration(t,0)
+function Base.show(io::IO, d::Time)
+    println(io, "Duration:")
+    println(io, "  secs: ", t.secs)
+    print(io,   "  nsecs: ", t.nsecs)
+end
 
 #Enforce 0 <= nsecs < 1e9
 function _canonical_time(secs, nsecs)
