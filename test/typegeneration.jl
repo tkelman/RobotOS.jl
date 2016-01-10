@@ -1,6 +1,5 @@
 #Tests of proper type generation
 using PyCall
-using Compat
 
 @rosimport geometry_msgs.msg: PoseStamped, Vector3
 @rosimport std_srvs.srv.Empty

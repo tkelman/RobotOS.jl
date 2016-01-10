@@ -1,5 +1,4 @@
 #Generate Julia composite types for ROS messages
-using Compat
 
 export @rosimport, rostypegen, rostypereset, gentypes, cleartypes
 
@@ -31,14 +30,14 @@ type ROSSrvModule <: ROSModule
     ROSSrvModule(pkg) = new(pkg, ASCIIString[], Set{ASCIIString}())
 end
 
-#These two global objects maintain the hierarchy from multiple calls to
+#These global objects maintain the hierarchy from multiple calls to
 #`@rosimport` and keep the link to the Python objects whenever communication
 #goes between RobotOS and rospy.
 const _rospy_imports = Dict{ASCIIString,ROSPackage}()
 const _rospy_objects = Dict{ASCIIString,PyObject}()
 const _rospy_modules = Dict{ASCIIString,PyObject}()
 
-const _ros_builtin_types = @compat Dict{ASCIIString, Symbol}(
+const _ros_builtin_types = Dict{ASCIIString, Symbol}(
     "bool"    => :Bool,
     "int8"    => :Int8,
     "int16"   => :Int16,
@@ -280,12 +279,6 @@ function modulecode(mod::ROSModule)
     modcode = Expr[]
 
     #Common imports
-    if VERSION < v"0.4-"
-        push!(modcode,
-            quote
-                using Compat
-            end)
-    end
     push!(modcode,
         quote
             using PyCall
